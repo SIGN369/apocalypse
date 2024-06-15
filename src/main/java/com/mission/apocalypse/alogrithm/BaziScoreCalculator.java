@@ -1,4 +1,4 @@
-package com.mission.tech.alogrithm;
+package com.mission.apocalypse.alogrithm;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;

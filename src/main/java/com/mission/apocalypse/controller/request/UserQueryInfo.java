@@ -1,4 +1,4 @@
-package com.mission.tech.controller.request;
+package com.mission.apocalypse.controller.request;
 
 import lombok.Data;
 
