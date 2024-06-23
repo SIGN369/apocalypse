@@ -1,4 +1,4 @@
-package com.mission.apocalypse.algorithm;
+package com.mission.apocalypse.alogrithm;
 
 import java.util.Scanner;
 import java.time.LocalDate;
