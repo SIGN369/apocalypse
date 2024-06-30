@@ -9,7 +9,7 @@ import java.util.GregorianCalendar;
  *
  * @author luohao
  */
-public class LunarCalendar {
+public class LunarSolarConverter {
     /**
      * 支持转换的最小农历年份
      */
@@ -32,6 +32,15 @@ public class LunarCalendar {
      * 以2014年的数据0x955ABF为例说明：
      *                  1001 0101 0101 1010 1011 1111
      *                闰九月                                  农历正月初一对应公历1月31号
+     1000 0100 1011 0110 1011 1111
+     |    |    |    |    |    |    |
+     |    |    |    |    |    |    +---- 公历1月31日（正月初一）
+     |    |    |    |    |    +--------- 小月（29天）
+     |    |    |    |    +-------------- 大月（30天）
+     |    |    |    +------------------- 大月（30天）
+     |    |    +------------------------ 小月（29天）
+     |    +----------------------------- 大月（30天）
+     +--------------------------------- 闰8月
      */
     private static final int[] LUNAR_INFO = {
             /*1900*/
@@ -84,17 +93,12 @@ public class LunarCalendar {
      * @param year                               农历年份
      * @param month                              农历月
      * @param monthDay                   农历日
-     * @param isLeapMonth        该月是否是闰月
      * @return 返回农历日期对应的公历日期，year0, month1, day2.
      */
-    public static final int[] lunarToSolar(int year, int month, int monthDay, boolean isLeapMonth) {
-
+    public static String lunarToSolar(int year, int month, int monthDay) {
         int dayOffset;
-
         int leapMonth;
-
         int i;
-
         if (year < MIN_YEAR || year > MAX_YEAR || month < 1 || month > 12
                 || monthDay < 1 || monthDay > 30) {
             throw new IllegalArgumentException(
@@ -121,7 +125,7 @@ public class LunarCalendar {
         // 这一年有闰月
 
         if (leapMonth != 0) {
-            if (month > leapMonth || (month == leapMonth && isLeapMonth)) {
+            if (month > leapMonth || (month == leapMonth && isLeapMonth(year,month))) {
 
                 if ((LUNAR_INFO[year - MIN_YEAR] & (0x80000 >> (month - 1))) == 0) {
                     dayOffset += 29;
@@ -180,7 +184,19 @@ public class LunarCalendar {
             }
         }
         solarInfo[0] = year;
-        return solarInfo;
+        return solarInfo[0] +  "-"+solarInfo[1] + "-" + solarInfo[2];
+    }
+
+    /**
+     * 判断是否为闰月
+     *
+     * @param year  农历年份
+     * @param month 农历月份
+     * @return 如果是闰月则返回true，否则返回false
+     */
+    private static boolean isLeapMonth(int year, int month) {
+        int leapMonth = (LUNAR_INFO[year - MIN_YEAR] & 0xf00000) >> 20;
+        return month == leapMonth;
     }
 
     /**
@@ -191,7 +207,7 @@ public class LunarCalendar {
      * @param monthDay
      * @return 返回公历日期对应的农历日期，year0，month1，day2，leap3
      */
-    public static final int[] solarToLunar(int year, int month, int monthDay) {
+    public static String solarToLunar(int year, int month, int monthDay) {
         int[] lunarDate = new int[4];
         Date baseDate = new GregorianCalendar(1900, 0, 31).getTime();
         Date objDate = new GregorianCalendar(year, month - 1, monthDay).getTime();
@@ -233,7 +249,7 @@ public class LunarCalendar {
         lunarDate[1] = iMonth;
         lunarDate[2] = offset + 1;
         lunarDate[3] = isLeap ? 1 : 0;
-        return lunarDate;
+        return lunarDate[0] + "-" + lunarDate[1] + "-" + lunarDate[2];
     }
 
     /**
@@ -320,6 +336,7 @@ public class LunarCalendar {
     }
 
     public static void main(String[] args) {
-        System.out.println(Arrays.toString(solarToLunar(1995, 5, 15)));
+        System.out.println(solarToLunar(2024, 1, 03));
+        System.out.println(lunarToSolar(1995, 4, 16));
     }
 }

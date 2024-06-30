@@ -1,11 +1,20 @@
 package com.mission.apocalypse.alogrithm;
 
+import com.mission.apocalypse.constants.CalendarTypeEnum;
+import com.mission.apocalypse.constants.GenderEnum;
 import com.mission.apocalypse.controller.request.UserQueryInfo;
+import com.mission.apocalypse.controller.response.BasicTransInfo;
 import com.mission.apocalypse.controller.response.LightFateResponse;
+import com.mission.apocalypse.util.DateUtils;
+import com.nextengine.zeus.tk.json.JsonEx;
+import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
+@Slf4j
 public class PanelAlgUtil {
 
 
@@ -18,72 +27,44 @@ public class PanelAlgUtil {
         LUNAR_YEAR_DATA.put(1995, new Integer[]{0, 30, 29, 30, 29, 30, 29, 29, 30, 29, 30, 29, 30});
     }
 
+
     public static LightFateResponse cal (UserQueryInfo userQueryInfo) {
         LightFateResponse lightFateResponse = new LightFateResponse();
+        LocalDate birthday = userQueryInfo.getBirthday();
+        GenderEnum gender = userQueryInfo.getGender();
+        Locale locale = new Locale("zh");
+        BasicTransInfo basicTransInfo = new BasicTransInfo();
+        if (CalendarTypeEnum.SOLAR.name().equals(userQueryInfo.getDateType().name())) {
+            String lunarBirth = LunarSolarConverter.solarToLunar(birthday.getYear(), birthday.getMonthValue(), birthday.getDayOfMonth());
+            LocalDate lunarBirth1 = DateUtils.parseDate(lunarBirth);
+            basicTransInfo.setLunarBirth(lunarBirth1);
+            basicTransInfo.setSolarBirth(birthday);
+            basicTransInfo.setConstellation(ZodiacUtil.getZodiacSign(birthday,locale));
+        }
+        if (CalendarTypeEnum.LUNAR.name().equals(userQueryInfo.getDateType().name())) {
+            String solarBirth = LunarSolarConverter.lunarToSolar(birthday.getYear(), birthday.getMonthValue(), birthday.getDayOfMonth());
+            LocalDate solarBirthDate = DateUtils.parseDate(solarBirth);
+            basicTransInfo.setSolarBirth(solarBirthDate);
+            basicTransInfo.setLunarBirth(birthday);
+            basicTransInfo.setConstellation(ZodiacUtil.getZodiacSign(solarBirthDate,locale));
+        }
+        basicTransInfo.setGender(gender.name());
+        log.info(">>>>>>>>> basicTransInfo cal end :{}", JsonEx.toJsonString(basicTransInfo));
 
+        lightFateResponse.setBasicTransInfo(basicTransInfo);
         return lightFateResponse;
     }
 
 
     public static void main(String[] args) {
-        // 输入农历生日
-        int lunarYear = 1998;
-        int lunarMonth = 4;
-        int lunarDay = 16;
-
-        // 转换为公历
-        String gregorianDate = lunarToGregorian(lunarYear, lunarMonth, lunarDay);
-
-        // 输出公历生日
-        System.out.println("公历生日: " + gregorianDate);
+        UserQueryInfo userQueryInfo = new UserQueryInfo();
+        LocalDate localDate = LocalDate.of(1995, 05, 15);
+        userQueryInfo.setBirthday(localDate);
+        userQueryInfo.setGender(GenderEnum.MAIL);
+        userQueryInfo.setDateType(CalendarTypeEnum.SOLAR);
+        cal(userQueryInfo);
     }
 
-    public static String lunarToGregorian(int year, int month, int day) {
-        // 基准日期：1995年农历新年的公历日期
-        int baseYear = 1995;
-        int baseMonth = 1;
-        int baseDay = 31;
 
-        // 计算农历日期到农历年的天数
-        int totalDays = 0;
-        Integer[] lunarMonths = LUNAR_YEAR_DATA.get(year);
-        for (int i = 1; i < month; i++) {
-            totalDays += lunarMonths[i];
-        }
-        totalDays += day - 1;
 
-        // 将农历天数转换为公历日期
-        return addDays(baseYear, baseMonth, baseDay, totalDays);
-    }
-
-    public static String addDays(int year, int month, int day, int days) {
-        int[] monthDays = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
-        while (days > 0) {
-            int daysInMonth = monthDays[month - 1];
-            // 闰年处理
-            if (month == 2 && isLeapYear(year)) {
-                daysInMonth = 29;
-            }
-            if (days < daysInMonth - day + 1) {
-                day += days;
-                days = 0;
-            } else {
-                days -= (daysInMonth - day + 1);
-                day = 1;
-                if (month == 12) {
-                    month = 1;
-                    year++;
-                } else {
-                    month++;
-                }
-            }
-        }
-
-        return String.format("%d-%02d-%02d", year, month, day);
-    }
-
-    public static boolean isLeapYear(int year) {
-        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-    }
 }

@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDate;
+
 /**
  * 测算者信息
  */
@@ -14,10 +16,10 @@ import lombok.Data;
 public class BasicTransInfo {
 
     @ApiModelProperty("公历生日")
-    private String calendarBirth;
+    private LocalDate solarBirth;
 
     @ApiModelProperty("农历生日")
-    private String lunarBirth;
+    private LocalDate lunarBirth;
 
     @ApiModelProperty("性别")
     private String gender;
